@@ -1,0 +1,187 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local remote = ReplicatedStorage:WaitForChild("AltinaHubRemote")
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "AltinaHub"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 850, 0, 520)
+main.Position = UDim2.new(0.5, -425, 0.5, -260)
+main.BackgroundColor3 = Color3.fromRGB(8, 13, 20)
+main.BorderSizePixel = 0
+main.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 14)
+corner.Parent = main
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(0, 350, 0, 60)
+title.Position = UDim2.new(0, 25, 0, 5)
+title.BackgroundTransparency = 1
+title.Text = "ALTINA HUB"
+title.TextColor3 = Color3.fromRGB(30, 210, 255)
+title.TextSize = 30
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = main
+
+local eggsTitle = Instance.new("TextLabel")
+eggsTitle.Size = UDim2.new(0, 150, 0, 60)
+eggsTitle.Position = UDim2.new(0, 390, 0, 5)
+eggsTitle.BackgroundTransparency = 1
+eggsTitle.Text = "🥚 EGGS"
+eggsTitle.TextColor3 = Color3.new(1,1,1)
+eggsTitle.TextSize = 22
+eggsTitle.Font = Enum.Font.GothamBold
+eggsTitle.Parent = main
+
+local close = Instance.new("TextButton")
+close.Size = UDim2.new(0, 50, 0, 45)
+close.Position = UDim2.new(1, -60, 0, 10)
+close.Text = "×"
+close.TextSize = 32
+close.TextColor3 = Color3.new(1,1,1)
+close.BackgroundTransparency = 1
+close.Parent = main
+
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1, -40, 1, -85)
+content.Position = UDim2.new(0, 20, 0, 75)
+content.BackgroundTransparency = 1
+content.Parent = main
+
+local auto = Instance.new("TextLabel")
+auto.Size = UDim2.new(0, 300, 0, 45)
+auto.Position = UDim2.new(0, 15, 0, 10)
+auto.BackgroundTransparency = 1
+auto.Text = "AUTO COLLECT EGGS"
+auto.TextColor3 = Color3.new(1,1,1)
+auto.TextSize = 22
+auto.Font = Enum.Font.GothamBold
+auto.TextXAlignment = Enum.TextXAlignment.Left
+auto.Parent = content
+
+local rarities = {
+	"Common",
+	"Uncommon",
+	"Rare",
+	"Legendary",
+	"Mythic",
+	"Secret",
+	"Internal",
+	"Divine"
+}
+
+local selected = {}
+
+local function createRarityButton(name, index)
+	local button = Instance.new("TextButton")
+
+	button.Size = UDim2.new(0, 150, 0, 42)
+
+	local column = (index - 1) % 4
+	local row = math.floor((index - 1) / 4)
+
+	button.Position = UDim2.new(
+		0,
+		15 + column * 160,
+		0,
+		70 + row * 52
+	)
+
+	button.Text = name
+	button.TextSize = 16
+	button.Font = Enum.Font.GothamBold
+	button.TextColor3 = Color3.new(1,1,1)
+	button.BackgroundColor3 = Color3.fromRGB(25, 32, 42)
+
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 8)
+	c.Parent = button
+
+	button.Parent = content
+
+	button.MouseButton1Click:Connect(function()
+		selected[name] = not selected[name]
+
+		if selected[name] then
+			button.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+			button.Text = "✓ " .. name
+		else
+			button.BackgroundColor3 = Color3.fromRGB(25, 32, 42)
+			button.Text = name
+		end
+	end)
+end
+
+for i, rarity in ipairs(rarities) do
+	createRarityButton(rarity, i)
+end
+
+local start = Instance.new("TextButton")
+start.Size = UDim2.new(0, 310, 0, 50)
+start.Position = UDim2.new(0, 15, 0, 190)
+start.Text = "AUTO COLLECT: OFF"
+start.TextSize = 18
+start.Font = Enum.Font.GothamBold
+start.TextColor3 = Color3.new(1,1,1)
+start.BackgroundColor3 = Color3.fromRGB(20, 35, 45)
+start.Parent = content
+
+local sc = Instance.new("UICorner")
+sc.CornerRadius = UDim.new(0, 10)
+sc.Parent = start
+
+local active = false
+
+start.MouseButton1Click:Connect(function()
+	active = not active
+
+	if active then
+		start.Text = "AUTO COLLECT: ON ✓"
+		start.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+
+		remote:FireServer("StartAutoCollect", selected)
+	else
+		start.Text = "AUTO COLLECT: OFF"
+		start.BackgroundColor3 = Color3.fromRGB(20, 35, 45)
+
+		remote:FireServer("StopAutoCollect")
+	end
+end)
+
+close.MouseButton1Click:Connect(function()
+	main.Visible = false
+end)
+
+-- Reopen button
+local reopen = Instance.new("TextButton")
+reopen.Size = UDim2.new(0, 55, 0, 55)
+reopen.Position = UDim2.new(0, 20, 0.5, -27)
+reopen.Text = "A"
+reopen.TextSize = 24
+reopen.Font = Enum.Font.GothamBold
+reopen.TextColor3 = Color3.new(1,1,1)
+reopen.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+reopen.Visible = false
+reopen.Parent = gui
+
+local rc = Instance.new("UICorner")
+rc.CornerRadius = UDim.new(1, 0)
+rc.Parent = reopen
+
+close.MouseButton1Click:Connect(function()
+	main.Visible = false
+	reopen.Visible = true
+end)
+
+reopen.MouseButton1Click:Connect(function()
+	main.Visible = true
+	reopen.Visible = false
+end)
